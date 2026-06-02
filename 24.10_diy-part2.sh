@@ -98,6 +98,23 @@ exit 0
 EOF
 chmod +x package/base-files/files/etc/uci-defaults/98-luci-fix
 
+# OpenClash 配置（禁用版本更新检查）
+cat > package/base-files/files/etc/uci-defaults/99-openclash-settings << 'EOF'
+#!/bin/sh
+# 等待 OpenClash 配置文件生成
+for i in 1 2 3 4 5; do
+    if [ -f /etc/config/openclash ]; then
+        uci set openclash.config.check_version='0'
+        uci set openclash.config.check_dev_version='0'
+        uci commit openclash
+        break
+    fi
+    sleep 1
+done
+exit 0
+EOF
+chmod +x package/base-files/files/etc/uci-defaults/99-openclash-settings
+
 # 预设root密码（首次登录后请立即修改）
 cat > package/base-files/files/etc/uci-defaults/99-set-password << 'EOF'
 #!/bin/sh
@@ -114,9 +131,6 @@ cat > package/base-files/files/etc/uci-defaults/100-disable-services << 'EOF'
 /etc/init.d/nikki disable           2>/dev/null
 # OpenClash 关闭，关闭版本更新检查
 /etc/init.d/openclash disable       2>/dev/null
-uci set openclash.config.enable_update=0 2>/dev/null
-uci set openclash.config.config_update_weekly=0 2>/dev/null
-uci commit openclash 2>/dev/null
 
 # VPN 相关（按需启用）
 /etc/init.d/tailscale disable       2>/dev/null
